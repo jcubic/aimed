@@ -18,6 +18,12 @@
 .aimed-editor nav, .aimed-editor textarea {
     border: 1px solid #444;
 }
+.aimed-editor nav {
+    border-radius: 3px 3px 0 0;
+}
+.aimed-editor textarea {
+    border-radius: 0 0 3px 3px;
+}
 .aimed-editor ul {
     list-style: none;
     margin: 0;

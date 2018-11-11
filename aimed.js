@@ -104,7 +104,13 @@
             {className: "fas fa-link", name: 'link'},
             {className: "fas fa-image", name: 'image'},
             {className: "fas fa-code", name: 'code'},
-            {className: "fas fa-quote-right", name: 'quote'},
+            {
+                className: "fas fa-quote-right",
+                name: 'quote',
+                fn: function() {
+                    this.toggle('> ', 'Blockquote', '');
+                }
+            },
             {className: "fas fa-list-ul", name: 'ul'},
             {className: "fas fa-list-ol", name: 'ol'}
         ]
