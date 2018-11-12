@@ -111,8 +111,54 @@
                     this.toggle('> ', 'Blockquote', '');
                 }
             },
-            {className: "fas fa-list-ul", name: 'ul'},
-            {className: "fas fa-list-ol", name: 'ol'}
+            {
+                className: "fas fa-list-ul",
+                name: 'ul',
+                fn: function() {
+                    this.swap_lines(/^\s*(?:[-*]|[0-9]\.)\s?/, 'List Item', function(data) {
+                        var m = data.lines[0].match(/^\s*([*-]|[0-9]\.)\s*/);
+                        var rep = m && m[1].match(/[0-9]+/) || !m ? ' * ' : '';
+                        return data.lines.map(function(line) {
+                            return line.replace(/^(\s*)(?:[*-]|[0-9]\.)?\s*/, rep);
+                        });
+                    });
+                }
+            },
+            {
+                className: "fas fa-list-ol",
+                name: 'ol',
+                fn: function() {
+                    this.swap_lines(/^\s*(?:[-*]|[0-9]\.)\s?/, 'List Item', function(data) {
+                        var lines = data.lines;
+                        var last = lines[lines.length - 1];
+                        var m = last.match(/^\s*([-*]|[0-9]\.)/);
+                        var count = 1;
+                        var re = /^\s*((?:[-*]|[0-9]\.)?)\s?/;
+                        if (m) {
+                            if (m[1].match(/[-*]/)) {
+                                return lines.map(function(line) {
+                                    return line.replace(re, ' ' + count++ + '. ');
+                                });
+                            } else {
+                                last = last.replace(re, '');
+                                console.log({last});
+                            }
+                        } else {
+                            var rep = ' 1. ';
+                            for (var i = lines.length; i--;) {
+                                m = lines[i].match(re);
+                                if (m && m[1]) {
+                                    rep = ' ' + (parseInt(m[1], 10) + 1) + '. ';
+                                    break;
+                                }
+                            }
+                            last = last.replace(re, rep);
+                            console.log({rep, last});
+                        }
+                        return lines.slice(0, -1).concat([last]);
+                    });
+                }
+            }
         ]
     };
     // ------------------------------------------------------------------------------------------
@@ -193,6 +239,75 @@
                     end_pos - before_str.length
                 );
             }
+        },
+        // --------------------------------------------------------------------------------------
+        swap_lines: function(re, default_text, fn) {
+            var start_pos = this.editor.selectionStart;
+            var end_pos = this.editor.selectionEnd;
+            var i, len, end_line, start_line;
+            var sum = 0;
+            var lines = this.editor.value.split(/\n/);
+            for (i = 0, len = lines.length; i<len; ++i) {
+                sum += lines[i].length + 1;
+                if (sum >= start_pos && start_line === undefined) {
+                    start_line = i;
+                }
+                if (sum >= end_pos && end_line === undefined) {
+                    end_line = i;
+                }
+            }
+            if (start_pos === 0) {
+                start_line = 0;
+            } else if (start_line === undefined) {
+                start_line = lines.length - 1;
+            }
+            if (end_line === undefined) {
+                end_line = lines.length - 1;
+            }
+            var before = lines.slice(0, start_line);
+            var after = lines.slice(end_line + 1, lines.length);
+            var middle = lines.slice(start_line, end_line + 1);
+            var range = [0, middle.length - 1];
+            var selected = middle.slice();
+            for (i = start_line; i--;) {
+                if (lines[i].match(re)) {
+                    before.pop();
+                    middle.unshift(lines[i]);
+                    range[0]++;
+                } else {
+                    break;
+                }
+            }
+            for (i = end_line + 1; i < lines.length; ++i) {
+                if (lines[i].match(re)) {
+                    after.shift();
+                    middle.push(lines[i]);
+                    range[1]++;
+                } else {
+                    break;
+                }
+            }
+            if (middle.length === 0) {
+                middle = [default_text];
+            }
+            lines = before.concat(fn({
+                lines: middle,
+                selected: range
+            }));
+            var point;
+            if (lines.length === 0) {
+                point = 0;
+            } else {
+                point = lines.reduce(function(acc, line) {
+                    return acc + line.length;
+                }, 0) + lines.length - 1;
+            }
+            this.set(lines.concat(after).join('\n'));
+            this.select(point, point);
+        },
+        // --------------------------------------------------------------------------------------
+        set: function(text) {
+            this.editor.value = text;
         },
         // --------------------------------------------------------------------------------------
         insert: function(text) {
