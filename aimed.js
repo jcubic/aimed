@@ -9,7 +9,7 @@
  *
  * AIMED Is Markdown EDitor
  *
- * Copyright (c) 2018 Jakub Jankiewicz <http://jcubic.pl/me>
+ * Copyright (c) 2018-2019 Jakub T. Jankiewicz <https://jcubic.pl/me>
  * Released under the MIT license
  */
 /* global define, module, global */
